@@ -7,4 +7,5 @@ enabled = true
 
 [vars]
 DOMAIN = ".test-123123123.store"
+ENC_KEY = "11111111111111111111111111111111"
 # ENC_KEY is secret: set via `wrangler secret put ENC_KEY`
