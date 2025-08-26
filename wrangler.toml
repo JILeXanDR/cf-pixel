@@ -2,6 +2,9 @@ name = "pixel"
 main = "src/worker.js"
 compatibility_date = "2025-08-26"
 
+[observability.logs]
+enabled = true
+
 [vars]
 PATH = "/p.js"
 DOMAIN = ".test-123123123.store"
