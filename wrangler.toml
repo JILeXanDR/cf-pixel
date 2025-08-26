@@ -1,4 +1,4 @@
-name = "pixel-worker"
+name = "pixel"
 main = "src/worker.js"
 compatibility_date = "2025-08-26"
 
