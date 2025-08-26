@@ -3,14 +3,12 @@ import { parse as parseCookie, serialize as serializeCookie } from "cookie";
 export default {
   async fetch(request, env, ctx) {
     try {
-      const PATH = (env?.PATH || "/p.js").trim() || "/p.js";
+      const PATH = "/p.js";
       const url = new URL(request.url);
       if (url.pathname !== PATH) return notFound();
 
       // --- AES key must be 32 bytes (AES-256)
-      const ENC_KEY_STR = env?.ENC_KEY;
-      ;
-      const keyBytes = new TextEncoder().encode(ENC_KEY_STR);
+      const keyBytes = new TextEncoder().encode(env?.ENC_KEY);
       if (keyBytes.byteLength !== 32) {
         console.error("ENC_KEY must be exactly 32 bytes, got", keyBytes.byteLength);
         return new Response(null, { status: 500 });

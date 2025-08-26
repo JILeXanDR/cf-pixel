@@ -6,6 +6,5 @@ compatibility_date = "2025-08-26"
 enabled = true
 
 [vars]
-PATH = "/p.js"
 DOMAIN = ".test-123123123.store"
 # ENC_KEY is secret: set via `wrangler secret put ENC_KEY`
