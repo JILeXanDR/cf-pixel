@@ -4,7 +4,6 @@
   "type": "module",
   "private": true,
   "dependencies": {
-    "cookie": "^1.0.2",
-    "xid-js": "^1.0.1"
+    "cookie": "^1.0.2"
   }
 }
