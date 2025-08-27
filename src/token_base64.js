@@ -1,7 +1,7 @@
 // Token v2: raw JSON + base64 (not encrypted)
 import { base64ToBytes, bytesToBase64, stripQuotes } from './utils.js';
 
-export default class TokenV2 {
+export default class {
   gen(visitorId) {
     const payload = JSON.stringify({
       id: visitorId,

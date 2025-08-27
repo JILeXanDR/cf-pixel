@@ -1,7 +1,7 @@
 import { base64ToBytes, bytesToBase64, stripQuotes } from './utils.js';
 
 // Token v1: encrypted JSON payload (current)
-export default class TokenV1 {
+export default class {
   constructor(keyBytes) {
     this.keyBytes = keyBytes;
   }
@@ -76,4 +76,3 @@ function concat(a, b) {
 async function importAesCbcKey(keyBytes) {
   return crypto.subtle.importKey('raw', keyBytes, { name: 'AES-CBC' }, false, ['encrypt']);
 }
-

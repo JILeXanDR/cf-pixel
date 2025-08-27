@@ -1,5 +1,5 @@
 import { parse as parseCookie, serialize as serializeCookie } from 'cookie';
-import Token from './token2.js';
+import Token from './token_base64.js';
 import genXid from './xid.js';
 
 const PATH = '/p.js';
@@ -51,14 +51,7 @@ export default {
       if (!visitorId) {
         visitorId = genXid();
         const tokenValue = token.gen(visitorId);
-        headers.append('Set-Cookie', serializeCookie('token', tokenValue, {
-          path: '/',
-          maxAge: 31536000, // 1y
-          httpOnly: true,
-          secure: true,
-          sameSite: 'none',
-          domain: COOKIE_DOMAIN,
-        }));
+        headers.append('Set-Cookie', genCookie(COOKIE_DOMAIN, tokenValue));
       }
 
       // Step 7: Respond with visitorId JS
@@ -73,3 +66,14 @@ export default {
     }
   },
 };
+
+function genCookie(domain, value) {
+  return serializeCookie('token', value, {
+    path: '/',
+    maxAge: 31536000, // 1y
+    httpOnly: true,
+    secure: true,
+    sameSite: 'none',
+    domain: domain,
+  });
+}

@@ -3,7 +3,13 @@
   "version": "1.0.0",
   "type": "module",
   "private": true,
+  "scripts": {
+    "dev": "wrangler dev"
+  },
   "dependencies": {
     "cookie": "^1.0.2"
+  },
+  "devDependencies": {
+    "wrangler": "^4.32.0"
   }
 }
