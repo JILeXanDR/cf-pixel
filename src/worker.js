@@ -2,14 +2,12 @@ import { parse as parseCookie, serialize as serializeCookie } from 'cookie';
 import Token from './token_base64.js';
 import genXid from './xid.js';
 
-const PATH = '/p1.js';
-
 export default {
   async fetch(request, env, ctx) {
     try {
       // Step 1: Validate request path
       const url = new URL(request.url);
-      if (url.pathname !== PATH) return new Response('not found', { status: 404 });
+      if (url.pathname !== '/p.js' && url.pathname !== '/p1.js') return new Response('not found', { status: 404 });
 
       // Step 2: Validate AES key
       const keyBytes = new TextEncoder().encode(env?.ENC_KEY);
