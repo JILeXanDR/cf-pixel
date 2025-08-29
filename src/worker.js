@@ -1,5 +1,5 @@
 import { parse as parseCookie, serialize as serializeCookie } from 'cookie';
-import Token from './token_base64.js';
+import Token from './token_encrypted.js';
 import genXid from './xid.js';
 
 export default {
@@ -27,15 +27,16 @@ export default {
       const reqCookies = parseCookie(request.headers.get('Cookie') || '');
       let visitorId = null;
 
-      // const tokenV1 = new Token(keyBytes);
-      const token = new Token();
+      const token = new Token(keyBytes);
+      // const token = new Token();
 
       // Step 5: Try to decrypt visitorId from cookie
       if (reqCookies.token) {
         try {
-          visitorId = token.parse(reqCookies.token);
+          visitorId = await token.parse(reqCookies.token);
         } catch (e) {
-          console.warn('cookie decrypt failed', e);
+          console.error('cookie decrypt failed', e);
+          return new Response(null, { status: 500 });
         }
       }
 
@@ -48,7 +49,7 @@ export default {
 
       if (!visitorId) {
         visitorId = genXid();
-        const tokenValue = token.gen(visitorId);
+        const tokenValue = await token.generate(visitorId);
         headers.append('Set-Cookie', genCookie(COOKIE_DOMAIN, tokenValue));
       }
 

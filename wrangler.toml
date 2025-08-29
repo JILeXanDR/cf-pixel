@@ -1,6 +1,7 @@
 name = "pixel"
 main = "src/worker.js"
-compatibility_date = "2025-08-26"
+compatibility_date = "2025-08-16"
+compatibility_flags = ["nodejs_compat"]
 
 [observability.logs]
 enabled = true
