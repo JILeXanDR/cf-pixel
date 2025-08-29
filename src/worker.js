@@ -2,7 +2,7 @@ import { parse as parseCookie, serialize as serializeCookie } from 'cookie';
 import Token from './token_base64.js';
 import genXid from './xid.js';
 
-const PATH = '/p.js';
+const PATH = '/p1.js';
 
 export default {
   async fetch(request, env, ctx) {
