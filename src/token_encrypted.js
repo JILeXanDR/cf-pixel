@@ -1,78 +1,37 @@
-import { base64ToBytes, bytesToBase64, stripQuotes } from './utils.js';
-
 // Token v1: encrypted JSON payload (current)
+import { decryptCookie, generate } from './encryption.js';
+
 export default class {
   constructor(keyBytes) {
     this.keyBytes = keyBytes;
   }
 
-  async gen(visitorId) {
-    const payload = new TextEncoder().encode(JSON.stringify({
+  /**
+   * Generate a new token for the given visitor ID.
+   * @param {String} visitorId
+   * @return {Promise<string>}
+   */
+  async generate(visitorId) {
+    // json stringify
+    // encrypt with AES-CFB
+    // base64 encode
+    return await generate(this.keyBytes, {
       id: visitorId,
       ts: new Date().toISOString(),
-    }));
-    const iv = crypto.getRandomValues(new Uint8Array(16));
-    const cipher = await aesCfbEncrypt(this.keyBytes, iv, payload);
-    return bytesToBase64(concat(iv, cipher));
+    });
   }
 
+  /**
+   * Parse a token and return the visitor ID.
+   * @param {String} token
+   * @return {Promise<String>}
+   */
   async parse(token) {
-    const tok = base64ToBytes(stripQuotes(token));
-    if (tok.length >= 16) {
-      const iv = tok.slice(0, 16);
-      const cipher = tok.slice(16);
-      const plain = await aesCfbDecrypt(this.keyBytes, iv, cipher);
-      const json = JSON.parse(new TextDecoder().decode(plain));
-      if (json && typeof json.id === 'string' && json.id) return json.id;
-      return null;
-    }
+    // decode base64
+    // decrypt with AES-CFB
+    // parse JSON
+    const decrypted = await decryptCookie(this.keyBytes, token);
+    return decrypted.id;
   }
-}
 
-async function aesCfbEncrypt(keyBytes, iv, plaintext) {
-  const key = await importAesCbcKey(keyBytes);
-  const out = new Uint8Array(plaintext.length);
-  let ivBlock = new Uint8Array(iv);
-  const zero = new Uint8Array(16);
-  for (let o = 0; o < plaintext.length;) {
-    const ks = new Uint8Array(await crypto.subtle.encrypt({
-      name: 'AES-CBC',
-      iv: ivBlock,
-    }, key, zero));
-    const n = Math.min(16, plaintext.length - o);
-    for (let i = 0; i < n; i++) out[o + i] = plaintext[o + i] ^ ks[i];
-    if (n === 16) ivBlock = out.slice(o, o + 16);
-    o += n;
-  }
-  return out;
-}
-
-async function aesCfbDecrypt(keyBytes, iv, ciphertext) {
-  const key = await importAesCbcKey(keyBytes);
-  const out = new Uint8Array(ciphertext.length);
-  let ivBlock = new Uint8Array(iv);
-  const zero = new Uint8Array(16);
-  for (let o = 0; o < ciphertext.length;) {
-    const ks = new Uint8Array(await crypto.subtle.encrypt({
-      name: 'AES-CBC',
-      iv: ivBlock,
-    }, key, zero));
-    const n = Math.min(16, ciphertext.length - o);
-    for (let i = 0; i < n; i++) out[o + i] = ciphertext[o + i] ^ ks[i];
-    if (n === 16) ivBlock = ciphertext.slice(o, o + 16);
-    o += n;
-  }
-  return out;
-}
-
-function concat(a, b) {
-  const out = new Uint8Array(a.length + b.length);
-  out.set(a, 0);
-  out.set(b, a.length);
-  return out;
-}
-
-// ----- AES-CFB via AES-CBC zero-block trick -----
-async function importAesCbcKey(keyBytes) {
-  return crypto.subtle.importKey('raw', keyBytes, { name: 'AES-CBC' }, false, ['encrypt']);
 }

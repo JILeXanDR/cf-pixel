@@ -2,12 +2,11 @@
 import { base64ToBytes, bytesToBase64, stripQuotes } from './utils.js';
 
 export default class {
-  gen(visitorId) {
-    const payload = JSON.stringify({
+  generate(visitorId) {
+    return bytesToBase64(new TextEncoder().encode(JSON.stringify({
       id: visitorId,
       ts: new Date().toISOString(),
-    });
-    return bytesToBase64(new TextEncoder().encode(payload));
+    })));
   }
 
   parse(token) {
