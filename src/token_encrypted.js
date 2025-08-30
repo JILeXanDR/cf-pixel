@@ -17,10 +17,18 @@ export default class {
     // json stringify
     // encrypt with AES-CFB
     // base64 encode
-    return await generate(this.encryptionKey, {
+    const token = await generate(this.encryptionKey, {
       id: visitorId,
       ts: new Date().toISOString(),
     });
+    console.log('generated token', token);
+    try {
+      await this.selfTest(token, visitorId);
+    } catch (e) {
+      console.error('self test failed', e);
+      throw e;
+    }
+    return token;
   }
 
   /**
@@ -34,5 +42,15 @@ export default class {
     // parse JSON
     const decrypted = await decryptCookie(this.encryptionKey, token);
     return decrypted.id;
+  }
+
+  async selfTest(token, visitorId) {
+    const parsedVisitorId = await this.parse(token);
+    console.log('parsedVisitorId', parsedVisitorId);
+    if (parsedVisitorId !== visitorId) {
+      throw new Error('parsedVisitorId !== visitorId');
+    } else {
+      console.log('self test passed %s === %s', parsedVisitorId, visitorId);
+    }
   }
 }

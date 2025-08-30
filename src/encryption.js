@@ -28,8 +28,8 @@ function encryptPayloadAES(key, payload) {
   return Buffer.concat([ivBytes, ctBytes]);
 }
 
-export async function decryptCookie(keyInput, v) {
-  const key = decodeKeyPhase(keyInput);
+export async function decryptCookie(encyptionKey, v) {
+  const key = decodeKeyPhase(encyptionKey);
   const {
     iv,
     ct,
@@ -48,6 +48,7 @@ function decodeBase64Phase(v) {
 }
 
 function decodeKeyPhase(keyInput) {
+  console.log('decodeKeyPhase keyInput', keyInput);
   const key = parseKeyToBytes(keyInput);
   if ([16, 24, 32].indexOf(key.length) === -1) {
     throw new Error(`AES key must be 16/24/32 bytes after decoding; got ${key.length}`);

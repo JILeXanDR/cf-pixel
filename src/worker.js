@@ -16,17 +16,16 @@ export default {
         return new Response(null, { status: 500 });
       }
 
-      // Step 4: Parse cookies
-      const reqCookies = parseCookie(request.headers.get('Cookie') || '');
       let visitorId = null;
 
       const token = new Token(env?.ENC_KEY);
-      // const token = new Token();
+
+      const encryptedToken = getEncryptedToken(request.headers.get('Cookie'));
 
       // Step 5: Try to decrypt visitorId from cookie
-      if (reqCookies.token) {
+      if (encryptedToken) {
         try {
-          visitorId = await token.parse(reqCookies.token);
+          visitorId = await token.parse(encryptedToken);
         } catch (e) {
           console.error('cookie decrypt failed', e);
           return new Response(null, { status: 500 });
@@ -58,6 +57,11 @@ export default {
     }
   },
 };
+
+function getEncryptedToken(cookies) {
+  const reqCookies = parseCookie(cookies || '');
+  return reqCookies.token;
+}
 
 function genCookie(domain, value) {
   return serializeCookie('token', value, {
