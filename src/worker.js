@@ -9,13 +9,6 @@ export default {
       const url = new URL(request.url);
       if (url.pathname !== '/p.js' && url.pathname !== '/p1.js') return new Response('not found', { status: 404 });
 
-      // Step 2: Validate AES key
-      const keyBytes = new TextEncoder().encode(env?.ENC_KEY);
-      if (keyBytes.byteLength !== 32) {
-        console.error('ENC_KEY must be exactly 32 bytes, got', keyBytes.byteLength);
-        return new Response(null, { status: 500 });
-      }
-
       // Step 3: Validate cookie domain
       const COOKIE_DOMAIN = env?.DOMAIN || '';
       if (COOKIE_DOMAIN.length === 0) {
@@ -27,7 +20,7 @@ export default {
       const reqCookies = parseCookie(request.headers.get('Cookie') || '');
       let visitorId = null;
 
-      const token = new Token(keyBytes);
+      const token = new Token(env?.ENC_KEY);
       // const token = new Token();
 
       // Step 5: Try to decrypt visitorId from cookie

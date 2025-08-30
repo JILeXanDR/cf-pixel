@@ -2,8 +2,10 @@
 import { decryptCookie, generate } from './encryption.js';
 
 export default class {
-  constructor(keyBytes) {
-    this.keyBytes = keyBytes;
+  constructor(encryptionKey) {
+    if (!encryptionKey) throw new Error('encryptionKey is required');
+    if (encryptionKey.length !== 32) throw new Error('encryptionKey must be 32 bytes, got ' + encryptionKey.length + ' bytes');
+    this.encryptionKey = encryptionKey;
   }
 
   /**
@@ -15,7 +17,7 @@ export default class {
     // json stringify
     // encrypt with AES-CFB
     // base64 encode
-    return await generate(this.keyBytes, {
+    return await generate(this.encryptionKey, {
       id: visitorId,
       ts: new Date().toISOString(),
     });
@@ -30,8 +32,7 @@ export default class {
     // decode base64
     // decrypt with AES-CFB
     // parse JSON
-    const decrypted = await decryptCookie(this.keyBytes, token);
+    const decrypted = await decryptCookie(this.encryptionKey, token);
     return decrypted.id;
   }
-
 }
