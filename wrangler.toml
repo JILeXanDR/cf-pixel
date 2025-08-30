@@ -9,3 +9,7 @@ enabled = true
 
 [vars]
 DOMAIN = ".test-123123123.store"
+
+[[routes]]
+pattern = "test-123123123.store/p1.js"
+zone_name = "test-123123123.store"
