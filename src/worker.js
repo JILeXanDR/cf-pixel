@@ -57,7 +57,7 @@ export default {
 };
 
 function getEncryptedToken(cookies) {
-  const reqCookies = parseCookie(cookies || '');
+  const reqCookies = parseCookie(cookies || '', { decode: (v) => v });
   return reqCookies.token;
 }
 
@@ -69,5 +69,6 @@ function genCookie(domain, value) {
     secure: true,
     sameSite: 'none',
     domain: domain,
+    encode: (v) => v,
   });
 }

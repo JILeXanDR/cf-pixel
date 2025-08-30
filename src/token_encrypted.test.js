@@ -12,17 +12,6 @@ describe('token_encrypted', () => {
     expect(decrypted).toBe(visitorId);
   });
 
-  // TODO: test is failed when key is 32 ones
-  // test('decryptToken should return the original token (key 32 ones)', async () => {
-  //   const token = new Token_encrypted('11111111111111111111111111111111');
-  //   const visitorId = 'd2pbfj7rt2fui6h7ni10';
-  //   const encrypted = await token.generate(visitorId);
-  //   console.log('encrypted', encrypted);
-  //   expect(typeof encrypted).toBe('string');
-  //   const decrypted = await token.parse(encrypted);
-  //   expect(decrypted).toBe(visitorId);
-  // });
-
   test('', async () => {
     const token = new Token_encrypted('N56n9na#Ybs4Tyeg6Lotadi7Rs!fpThD');
     const visitorId = 'hello world';
@@ -32,13 +21,6 @@ describe('token_encrypted', () => {
     const decrypted = await token.parse(encrypted);
     expect(decrypted).toBe(visitorId);
   });
-
-  // test('', async () => {
-  //   const token = new Token_encrypted('11111111111111111111111111111111');
-  //   const visitorId = 'd2pbfj7rt2fui6h7ni10';
-  //   const decrypted = await token.parse(`dOA4pCTwqddgLbKjo/bN0B0r0wDC5s0A1CbR3gZ9J7DH79lJ1VOu9F98SbDXVlCZulH4/2bVtgz17SGpKXf22jUlD0OcjZ9ZdyL7s38=`);
-  //   expect(decrypted).toBe(visitorId);
-  // });
 
   test('token 1 encrypted in Go should be decrypted by JS', async () => {
     const token = new Token_encrypted('N56n9na#Ybs4Tyeg6Lotadi7Rs!fpThD');

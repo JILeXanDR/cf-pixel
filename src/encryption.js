@@ -3,7 +3,7 @@ import CryptoJS from 'crypto-js';
 export async function generate(keyInput, payload) {
   const json = JSON.stringify(payload);
   const encrypted = encryptPayloadAES(keyInput, Buffer.from(json));
-  return Buffer.from(encrypted).toString('base64');
+  return encrypted.toString('base64');
 }
 
 /**
@@ -35,7 +35,6 @@ export async function decryptCookie(encryptionKey, v) {
     ct,
   } = decodeBase64Phase(v);
   const pt = decryptPhase(key, iv, ct);
-  console.log('pt', pt);
   return decodeJsonPhase(pt);
 }
 
@@ -49,7 +48,6 @@ function decodeBase64Phase(v) {
 }
 
 function decodeKeyPhase(keyInput) {
-  console.log('decodeKeyPhase keyInput', keyInput);
   const key = parseKeyToBytes(keyInput);
   if ([16, 24, 32].indexOf(key.length) === -1) {
     throw new Error(`AES key must be 16/24/32 bytes after decoding; got ${key.length}`);
