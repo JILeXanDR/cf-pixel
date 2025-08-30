@@ -2,6 +2,15 @@ import { parse as parseCookie, serialize as serializeCookie } from 'cookie';
 import Token from './token_encrypted.js';
 import genXid from './xid.js';
 
+const encryptionKey = process.env['ENC_KEY'] || '';
+
+if (encryptionKey.length !== 32) {
+  console.error('ENC_KEY must be 32 bytes, got', encryptionKey.length);
+  process.exit(1);
+}
+
+console.log('loaded ENC_KEY', encryptionKey);
+
 export default {
   async fetch(request, env, ctx) {
     try {
@@ -18,7 +27,7 @@ export default {
 
       let visitorId = null;
 
-      const token = new Token(env?.ENC_KEY);
+      const token = new Token(encryptionKey);
 
       const encryptedToken = getEncryptedToken(request.headers.get('Cookie'));
 
