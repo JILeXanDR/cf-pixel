@@ -8,4 +8,3 @@ enabled = true
 
 [vars]
 DOMAIN = ".test-123123123.store"
-ENC_KEY = "" # Secret variable
