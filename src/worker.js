@@ -45,9 +45,7 @@ export default {
         headers.append('Set-Cookie', genCookie(COOKIE_DOMAIN, tokenValue));
       }
 
-      // Step 7: Respond with visitorId JS
-      const body = `window._PH_VISITOR_ID='${visitorId}';`;
-      return new Response(body, {
+      return new Response(`window._PH_VISITOR_ID='${visitorId}';`, {
         status: 200,
         headers,
       });

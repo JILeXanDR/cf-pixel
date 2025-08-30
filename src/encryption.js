@@ -28,13 +28,14 @@ function encryptPayloadAES(key, payload) {
   return Buffer.concat([ivBytes, ctBytes]);
 }
 
-export async function decryptCookie(encyptionKey, v) {
-  const key = decodeKeyPhase(encyptionKey);
+export async function decryptCookie(encryptionKey, v) {
+  const key = decodeKeyPhase(encryptionKey);
   const {
     iv,
     ct,
   } = decodeBase64Phase(v);
   const pt = decryptPhase(key, iv, ct);
+  console.log('pt', pt);
   return decodeJsonPhase(pt);
 }
 

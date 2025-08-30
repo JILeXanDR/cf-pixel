@@ -21,7 +21,7 @@ export default class {
       id: visitorId,
       ts: new Date().toISOString(),
     });
-    console.log('generated token', token);
+    console.log('generated token', token, 'for visitor id', visitorId, 'using', this.encryptionKey, 'encryption key');
     try {
       await this.selfTest(token, visitorId);
     } catch (e) {
