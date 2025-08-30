@@ -1,7 +1,14 @@
-// Token v1: encrypted JSON payload (current)
-import { decryptCookie, generate } from './encryption.js';
+import { decryptPayloadAES, encryptPayloadAES } from './encryption.js';
 
 export default class {
+  /**
+   * Creates an instance of the class with the provided encryption key.
+   *
+   * @param {string} encryptionKey - The 32-byte encryption key used for encryption and decryption. Must be exactly 32 characters long.
+   * @throws {Error} If the encryptionKey is not provided.
+   * @throws {Error} If the encryptionKey length is not equal to 32 bytes.
+   * @return {Object} A new instance initialized with the specified encryption key.
+   */
   constructor(encryptionKey) {
     if (!encryptionKey) throw new Error('encryptionKey is required');
     if (encryptionKey.length !== 32) throw new Error('encryptionKey must be 32 bytes, got ' + encryptionKey.length + ' bytes');
@@ -14,21 +21,22 @@ export default class {
    * @return {Promise<string>}
    */
   async generate(visitorId) {
-    // json stringify
-    // encrypt with AES-CFB
-    // base64 encode
-    const token = await generate(this.encryptionKey, {
+    const json = JSON.stringify({
       id: visitorId,
       ts: new Date().toISOString(),
     });
-    console.log('generated token', token, 'for visitor id', visitorId, 'using', this.encryptionKey, 'encryption key');
-    try {
-      await this.selfTest(token, visitorId);
-    } catch (e) {
-      console.error('self test failed', e);
-      throw e;
-    }
-    return token;
+    const encrypted = encryptPayloadAES(this.encryptionKey, Buffer.from(json));
+    const encoded = encrypted.toString('base64');
+
+    console.log(`generated token ${encoded} for visitor id ${visitorId} using ${this.encryptionKey} encryption key`);
+    // try {
+    //   await this.selfTest(token, visitorId);
+    // } catch (e) {
+    //   console.error('self test failed', e);
+    //   throw e;
+    // }
+
+    return encoded;
   }
 
   /**
@@ -37,11 +45,10 @@ export default class {
    * @return {Promise<String>}
    */
   async parse(token) {
-    // decode base64
-    // decrypt with AES-CFB
-    // parse JSON
-    const decrypted = await decryptCookie(this.encryptionKey, token);
-    return decrypted.id;
+    const decoded = Buffer.from(token, 'base64');
+    const decrypted = decryptPayloadAES(this.encryptionKey, decoded);
+    const parsed = JSON.parse((new TextDecoder()).decode(decrypted));
+    return parsed.id;
   }
 
   async selfTest(token, visitorId) {

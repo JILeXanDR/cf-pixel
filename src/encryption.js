@@ -1,122 +1,69 @@
 import CryptoJS from 'crypto-js';
 
-export async function generate(keyInput, payload) {
-  const json = JSON.stringify(payload);
-  const encrypted = encryptPayloadAES(keyInput, Buffer.from(json));
-  return encrypted.toString('base64');
-}
-
 /**
- * Encrypts a payload using AES-CFB mode.
- * @param {string} key - Must be 16, 24, or 32 bytes.
- * @param {Buffer|Uint8Array} payload
- * @returns {Buffer} cipherText (IV + encrypted payload)
+ * Encrypts payload using AES-CFB mode.
+ * @param {string} key - 16, 24, or 32 bytes (utf8).
+ * @param {Buffer<ArrayBuffer>} payload
+ * @returns {Buffer} IV + ciphertext
  */
-function encryptPayloadAES(key, payload) {
-  if (![16, 24, 32].includes(key.length)) {
-    throw new Error(`Key must be 16, 24, or 32 bytes, got ${key.length} bytes`);
-  }
+export function encryptPayloadAES(key, payload) {
+  if (typeof key !== 'string' || !key.length) throw new Error('key must be a non-empty string');
+  if (!Buffer.isBuffer(payload)) throw new Error('payload must be Buffer<ArrayBuffer>');
+
+  const keyBytes = parseKey(key);
   const iv = CryptoJS.lib.WordArray.random(16);
-  const encrypted = CryptoJS.AES.encrypt(CryptoJS.lib.WordArray.create(payload), CryptoJS.enc.Utf8.parse(key), {
+  const encrypted = CryptoJS.AES.encrypt(CryptoJS.lib.WordArray.create(payload), CryptoJS.lib.WordArray.create(keyBytes), {
     iv,
     mode: CryptoJS.mode.CFB,
     padding: CryptoJS.pad.NoPadding,
   });
   // Concatenate IV and ciphertext
-  const ivBytes = Buffer.from(iv.toString(CryptoJS.enc.Hex), 'hex');
-  const ctBytes = Buffer.from(encrypted.ciphertext.toString(CryptoJS.enc.Hex), 'hex');
-  return Buffer.concat([ivBytes, ctBytes]);
+  return Buffer.concat([
+    Buffer.from(iv.toString(CryptoJS.enc.Hex), 'hex'), Buffer.from(encrypted.ciphertext.toString(CryptoJS.enc.Hex), 'hex')]);
 }
 
-export async function decryptCookie(encryptionKey, v) {
-  const key = decodeKeyPhase(encryptionKey);
-  const {
-    iv,
-    ct,
-  } = decodeBase64Phase(v);
-  const pt = decryptPhase(key, iv, ct);
-  return decodeJsonPhase(pt);
-}
+/**
+ * Decrypts AES-CFB payload.
+ * @param {string} key
+ * @param {Buffer<ArrayBuffer>} payload - base64 or Buffer
+ * @returns {Buffer} plaintext
+ */
+export function decryptPayloadAES(key, payload) {
+  if (typeof key !== 'string' || !key.length) throw new Error('key must be a non-empty string');
+  if (!Buffer.isBuffer(payload)) throw new Error('payload must be Buffer<ArrayBuffer>');
 
-function decodeBase64Phase(v) {
-  const data = base64ToU8(v);
-  if (data.length < 16) throw new Error('cipher must be greater than 16 bytes, got ' + data.length + ' bytes');
-  return {
-    iv: data.slice(0, 16),
-    ct: data.slice(16),
-  };
-}
-
-function decodeKeyPhase(keyInput) {
-  const key = parseKeyToBytes(keyInput);
-  if ([16, 24, 32].indexOf(key.length) === -1) {
-    throw new Error(`AES key must be 16/24/32 bytes after decoding; got ${key.length}`);
-  }
-  return key;
-}
-
-function decryptPhase(key, iv, ct) {
-  const ptWA = CryptoJS.AES.decrypt({ ciphertext: u8ToWordArray(ct) }, u8ToWordArray(key), {
-    iv: u8ToWordArray(iv),
+  const keyBytes = parseKey(key);
+  if (payload.length < 16) throw new Error('cipher must be greater than 16 bytes');
+  const iv = payload.subarray(0, 16), ct = payload.subarray(16);
+  // CryptoJS expects ciphertext as WordArray
+  const ptWA = CryptoJS.AES.decrypt({ ciphertext: CryptoJS.lib.WordArray.create(ct) }, CryptoJS.lib.WordArray.create(keyBytes), {
+    iv: CryptoJS.lib.WordArray.create(iv),
     mode: CryptoJS.mode.CFB,
     padding: CryptoJS.pad.NoPadding,
   });
-  return wordArrayToU8(ptWA);
+  return Buffer.from(wordArrayToU8(ptWA));
 }
 
-function decodeJsonPhase(pt) {
-  const td = new TextDecoder();
-  return JSON.parse(td.decode(pt));
+/**
+ * Parses key as utf8 and checks length.
+ * @param {string} input
+ * @returns {Buffer}
+ */
+function parseKey(input) {
+  if (typeof input !== 'string' || !input.length) throw new Error('Key is empty');
+  const keyBytes = Buffer.from(input, 'utf8');
+  if (![16, 24, 32].includes(keyBytes.length)) throw new Error(`Key must be 16, 24, or 32 bytes, got ${keyBytes.length}`);
+  return keyBytes;
 }
 
-// --- helpers (inlined) ---
-function normalizeB64(b64) {
-  let s = (b64 || '').trim().replace(/[\r\n\s]/g, '').replace(/-/g, '+').replace(/_/g, '/');
-  if (s.length % 4 !== 0) s += '='.repeat(4 - (s.length % 4));
-  return s;
-}
-
-function base64ToU8(b64maybeUrl) {
-  const s = normalizeB64(b64maybeUrl);
-  const bin = atob(s);
-  const out = new Uint8Array(bin.length);
-  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i) & 0xff;
-  return out;
-}
-
-function hexToU8(hex) {
-  const s = (hex || '').trim().toLowerCase();
-  if (!/^[0-9a-f]+$/i.test(s) || s.length % 2 !== 0) throw new Error('Invalid hex key');
-  const out = new Uint8Array(s.length / 2);
-  for (let i = 0; i < out.length; i++) out[i] = parseInt(s.substr(i * 2, 2), 16);
-  return out;
-}
-
-function parseKeyToBytes(input) {
-  if (!input) throw new Error('Key is empty');
-  try {
-    const b = base64ToU8(input);
-    if (b.length) return b;
-  } catch (_) {
-  }
-  try {
-    const b = hexToU8(input);
-    if (b.length) return b;
-  } catch (_) {
-  }
-  // fallback: treat as UTF-8 passphrase
-  return new TextEncoder().encode(input);
-}
-
-function u8ToWordArray(u8) {
-  const words = [];
-  for (let i = 0; i < u8.length; i++) words[i >>> 2] = (words[i >>> 2] || 0) | (u8[i] << (24 - (i % 4) * 8));
-  return CryptoJS.lib.WordArray.create(words, u8.length);
-}
-
+/**
+ * Converts CryptoJS WordArray to Uint8Array.
+ * @param {CryptoJS.lib.WordArray} wa
+ * @returns {Uint8Array}
+ */
 function wordArrayToU8(wa) {
-  const words = wa.words, sigBytes = wa.sigBytes;
-  const out = new Uint8Array(sigBytes);
-  for (let i = 0; i < sigBytes; i++) out[i] = (words[i >>> 2] >>> (24 - (i % 4) * 8)) & 0xff;
+  // WordArray stores bytes in 32-bit words
+  const out = new Uint8Array(wa.sigBytes);
+  for (let i = 0; i < wa.sigBytes; i++) out[i] = (wa.words[i >>> 2] >>> (24 - (i % 4) * 8)) & 0xff;
   return out;
 }
